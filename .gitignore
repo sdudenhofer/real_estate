@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+notes
+realestate_data.db
+profile.svg
+geocode_cache.csv
