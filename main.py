@@ -30,11 +30,11 @@ def get_session():
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
+
+def lifespan(app: FastAPI):
     create_db_and_tables()
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI()
 
 class geoData(SQLModel, table=True):
     id: int = Field(default= None, primary_key=True)
@@ -43,8 +43,8 @@ class geoData(SQLModel, table=True):
     latitude: str = Field(max_length=10)
     longitude: str = Field(max_length=10)
 
-async def create_latlong(session: SessionDep):
-    latlong = await geoData.model_validate(latlong)
+def create_latlong(session: SessionDep):
+    latlong = geoData.model_validate(data)
     for row in data[['RegionName', 'State']].iter_rows():
         city_state = f"{row[0]}, {row[1]}"
         location = geolocator.geocode(city_state)
