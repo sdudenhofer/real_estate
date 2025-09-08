@@ -43,53 +43,38 @@ class geoData(SQLModel, table=True):
     latitude: str = Field(max_length=10)
     longitude: str = Field(max_length=10)
 
-async def create_latlong(latlong: geoData, session: SessionDep):
+async def create_latlong(session: SessionDep):
     latlong = await geoData.model_validate(latlong)
     for row in data[['RegionName', 'State']].iter_rows():
         city_state = f"{row[0]}, {row[1]}"
         location = geolocator.geocode(city_state)
         # Calculate distance from a reference point (e.g., New York City)
-        reference_point = (40.7128, -74.0060)
-        if location:
-            distance = geodesic(reference_point, (location.latitude, location.longitude)).miles
-        else:
-            distance = None
+
 
     print(f"Distance from New York City: {distance} miles")
 
 
-class realEstate(SQLModel, table=True):
-    id: int
-    cityStateid: int # reference to geoData table
-    year: str
-    january: float
-    february: float
-    march: float
-    april: float
-    may: float
-    june: float
-    july: float
-    august: float
-    september: float
-    october: float
-    november: float
-    december: float
+#class realEstate(SQLModel, table=True):
+#    id: int
+#    cityStateid: int # reference to geoData table
+#    year: str
+#    january: float
+#    february: float
+#    march: float
+#    april: float
+#    may: float
+#    june: float
+#    july: float
+#    august: float
+#    september: float
+#    october: float
+#    november: float
+#    december: float
 
 @app.get("/api/latlong")
 async def latlong_data():
     return()
-#async def home():
-#    for row in data_list:
-#        city = row[2]
-#        state = row[5]
-#        city_state = f"{city}, {state}"
-#        location = geolocator.geocode(city_state)
-#        if location:
-#            data.loc[(data['RegionName'] == city) & (data['State'] == state), 'Latitude'] = location.latitude
-#            data.loc[(data['RegionName'] == city) & (data['State'] == state), 'Longitude'] = location.longitude
-#            print(f'Geocoded {city_state}: ({location.latitude}, {location.longitude})')
-#        else:
-#            print('City Not Found')
+
 
 if __name__ == "__main__":
-    create_latlong()
+    create_latlong(Session)
