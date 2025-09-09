@@ -53,28 +53,5 @@ def create_latlong(session: SessionDep):
 
     print(f"Distance from New York City: {distance} miles")
 
-
-#class realEstate(SQLModel, table=True):
-#    id: int
-#    cityStateid: int # reference to geoData table
-#    year: str
-#    january: float
-#    february: float
-#    march: float
-#    april: float
-#    may: float
-#    june: float
-#    july: float
-#    august: float
-#    september: float
-#    october: float
-#    november: float
-#    december: float
-
-@app.get("/api/latlong")
-async def latlong_data():
-    return()
-
-
 if __name__ == "__main__":
     create_latlong(Session)
