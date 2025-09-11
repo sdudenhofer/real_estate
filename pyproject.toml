@@ -16,9 +16,11 @@ dependencies = [
     "pandas>=2.3.1",
     "polars>=1.31.0",
     "py-spy>=0.4.1",
+    "python-dotenv>=1.1.1",
     "ruff>=0.12.12",
     "sqlmodel>=0.0.24",
     "streamlit>=1.47.1",
+    "supabase>=2.18.1",
     "tool>=0.8.0",
     "vega-datasets>=0.9.0",
 ]
