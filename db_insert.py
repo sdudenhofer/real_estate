@@ -1,6 +1,6 @@
 import polars as pl
 from geopy.geocoders import Nominatim
-from sqlmodel import SQLModel, Field, create_engine, Session, select, table
+from sqlmodel import SQLModel, Field
 from supabase import create_client, Client
 from dotenv import load_dotenv
 import os

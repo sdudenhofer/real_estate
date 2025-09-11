@@ -2,8 +2,10 @@
 
 ### This project is in the early stages.
 
-- Currently generating latitude/longitude using Nominatim
-- I am storing this in Supabase
+Modules needed:
+```
+- 
+```
 
 ### Next Steps
 
