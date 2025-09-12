@@ -17,7 +17,7 @@ async def visualize_data():
     # Fetch data from Supabase
     response = supabase.table("geoData").select("*").execute()
     # data = jsonify(response)
-    df = pl.dataframe(response.data)
-    grouped_by = df.groupby("state").agg()
-    return_data = pl.json_normalize(grouped_by)
-    return {"data": return_data}
+    # df = pl.read_database(supabase.table("geoData").select("*").execute())
+    # grouped_by = df.groupby("state").agg()
+    # return_data = pl.json_normalize(grouped_by)
+    return {"data": response}
