@@ -27,7 +27,7 @@ async def latlong_data():
 
 @app.get("/process_distance")
 async def process_distance():
-    latlong_data_pull = supabase.table("geoData").select("city", "state", "latitude", "longitude").execute()
+    latlong_data_pull = supabase.table("geoData").select("*").execute()
     parsed_data = parse_data(latlong_data_pull)
     return parsed_data
 
