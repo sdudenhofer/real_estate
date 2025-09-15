@@ -25,10 +25,24 @@ async def latlong_data():
     response = supabase.table("geoData").select("*").execute()
     return {"data": response}
 
+latlong_list = []
+
 @app.get("/process_distance")
 async def process_distance():
-    latlong_data_pull = supabase.table("geoData").select("*").execute()
-    parsed_data = parse_data(latlong_data_pull)
-    return parsed_data
+    latlong_data_pull = supabase.table("geoData").select('id', 'latitude', 'longitude').execute()
+    latlong_list.append(latlong_data_pull)
+    for row in latlong_list:
+        lat = str(row).split(", ")[1]
+        lat2 = lat.split(":")[1]
+        lat3 = lat2.replace("'", "")
+        long = str(row).split(", ")[2]
+        long2 = long.split(":")[1]
+        long3 = long2.replace("'", "")
+        long4 = long3.strip(')')
+        city_id = str(row).split(", ")[0]
+        id = city_id.split(":")[1]
+        latlong = lat3 + ", " + long4
+        return latlong, id
+    
 
 
