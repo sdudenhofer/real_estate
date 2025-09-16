@@ -26,6 +26,7 @@ async def latlong_data():
     return {"data": response}
 
 latlong_list = []
+prev_city_id = None
 
 @app.get("/process_distance")
 async def process_distance():
@@ -38,11 +39,15 @@ async def process_distance():
         long = str(row).split(", ")[2]
         long2 = long.split(":")[1]
         long3 = long2.replace("'", "")
-        long4 = long3.strip(')')
+        long4 = long3.strip('}')
         city_id = str(row).split(", ")[0]
         id = city_id.split(":")[1]
         latlong = lat3 + ", " + long4
-        return latlong, id
+        point1 = (41.49008, -71.312796)  # Example: Newport, RI
+        distance = geodesic(latlong, prev_city_id)
+        prev_city_id = id
+        return id, distance.miles, prev_city_id
+
     
 
 
