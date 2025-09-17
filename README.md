@@ -2,9 +2,16 @@
 
 ### This project is in the early stages.
 
-Modules needed:
+To get started:
+
+- Clone this repo
+- Use uv to grab the needed modules
 ```
-- 
+uv sync
+```
+- To run the app 
+```
+uv run fastapi dev
 ```
 
 ### Next Steps
