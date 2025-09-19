@@ -5,3 +5,4 @@ data/realestate_data.db
 profile.svg
 geocode_cache.csv
 .env
+.envrc

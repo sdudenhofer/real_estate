@@ -3,26 +3,40 @@ import polars as pl
 from supabase import create_client, Client
 from dotenv import load_dotenv
 import os
-from geopy.distance import geodesic
+import pandas as pd
+import polars as pl
+import json
+from sqlalchemy import create_engine
+
 
 load_dotenv()
 
 app = FastAPI()
+
+# Fetch variables
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+USER = os.getenv("user")
+PASSWORD = os.getenv("password")
+HOST = os.getenv("host")
+PORT = os.getenv("port")
+DBNAME = os.getenv("dbname")
 
-def parse_data(data, data1):
-    for row in data:
-        initial_strip = str(row).split(",")
-        secondary_strip = str(initial_strip).strip("}")
-        tertiary_strip = str(secondary_strip).strip('"')
-        return tertiary_strip
-    for rows in data1:
-        initial_strip1 = str(rows).split(",")
-        secondary_strip1 = str(initial_strip1).strip("}")
-        tertiary_strip1 = str(secondary_strip1).strip('"')
-        return tertiary_strip1
+# Construct the SQLAlchemy connection string
+DATABASE_URL = f"postgresql+psycopg2://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}?sslmode=require"
+
+# Create the SQLAlchemy engine
+engine = create_engine(DATABASE_URL)
+# If using Transaction Pooler or Session Pooler, we want to ensure we disable SQLAlchemy client side pooling -
+# https://docs.sqlalchemy.org/en/20/core/pooling.html#switching-pool-implementations
+# engine = create_engine(DATABASE_URL, poolclass=NullPool)
+
+# Test the connection
+try:
+    conn = engine.connect()
+except SystemError as e:
+    print(f"Error: {e}")
 
 @app.get("/latlong_data")
 async def latlong_data():
@@ -35,14 +49,8 @@ secondary_list = []
 
 @app.get("/process_distance")
 async def process_distance():
-    latlong_data_pull = supabase.table("geoData").select('id', 'latitude', 'longitude').execute()
-    secondary_data_pull = supabase.table("geoData").select('id', 'latitude', 'longitude').execute()
-    latlong_list.append(latlong_data_pull)
-    secondary_list.append(secondary_data_pull)
-    output = parse_data(latlong_list, secondary_list)
-    return output
-    
-
-    
+    query = "SELECT * FROM geoData"
+    polar_df = pl.read_database(query, engine)
+    return polar_df
 
 
