@@ -11,9 +11,7 @@ raw_data = "./data/City_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv"
 reader = pl.read_csv(raw_data)
 data = pl.DataFrame(reader)
 
-url: str = os.environ.get("SUPABASE_URL")
-key: str = os.environ.get("SUPABASE_KEY")
-supabase: Client = create_client(url, key)
+
 
 class geoData(SQLModel, table=True):
     id: int = Field(default= None, primary_key=True)
