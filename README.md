@@ -18,3 +18,4 @@ uv run fastapi dev
 
 - Generate radius' for each location to see real estate data with in X miles
 - Generate Map and then build out pricing data scales
+- Currently saving to database in docker file
