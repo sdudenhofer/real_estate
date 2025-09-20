@@ -4,5 +4,6 @@ notes
 data/realestate_data.db
 profile.svg
 geocode_cache.csv
-.env
+docker/.env
 .envrc
+.env
