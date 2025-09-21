@@ -12,14 +12,6 @@ reader = pl.read_csv(raw_data)
 data = pl.DataFrame(reader)
 
 
-
-class geoData(SQLModel, table=True):
-    id: int = Field(default= None, primary_key=True)
-    city: str = Field(max_length=100)
-    state: str = Field(max_length=2)
-    latitude: str = Field(max_length=10)
-    longitude: str = Field(max_length=10)
-
 def create_latlong():
     for rows in data[['RegionName', 'State']].iter_rows(named=True):
         city_state = f"{rows['RegionName']}, {rows['State']}"
