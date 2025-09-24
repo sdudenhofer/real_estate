@@ -7,3 +7,4 @@ geocode_cache.csv
 docker/.env
 .envrc
 .env
+notes.local
