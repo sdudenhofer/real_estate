@@ -8,3 +8,5 @@ docker/.env
 .envrc
 .env
 notes.local
+*.db
+*.log
