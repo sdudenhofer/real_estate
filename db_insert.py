@@ -30,12 +30,11 @@ con.execute("""
             """)
 con.commit()
 
-con.sql("CREATE TABLE redfin_data AS SELECT * FROM initial_df")
+con.sql("CREATE TABLE IF NOT EXISTS redfin_data AS SELECT * FROM initial_df")
 
 
 count = 0
 for rows in data.iter_rows(named=True):
-        
         city_state = f"{rows['RegionName']}, {rows['State']}"
         location = geolocator.geocode(city_state)
         if location:
