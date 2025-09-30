@@ -10,7 +10,7 @@ region_id = connection.execute("SELECT RegionID, State, RegionName FROM redfin_d
 
 city_state = region_id.with_columns(
     pl.concat_str([
-        pl.col("RegionName"),pl.lit(", "),pl.col("State")    
+        pl.col("RegionName"),pl.lit(", "),pl.col("State")
         ],
     ).alias("city_state"))
 
@@ -50,7 +50,7 @@ for rows in distance_info:
     lat = float(rows[1])
     long = float(rows[2])
     if lat is None or long is None:
-        logging.warning(f"Skipping RegionID {region_id}, {city_state_str} due to missing coordinates.")
+        logging.warning(f"Skipping RegionID {region_id} due to missing coordinates.")
     for values in empty_df.iter_rows(named=True):
         if type(values['latitude']) is not float or type(values['longitude']) is not float:
             values['latitude'] = 0.0
@@ -66,5 +66,4 @@ for rows in distance_info:
             except Exception as e:
                  logging.error(f"Error calculating/inserting distance between {} -> {coord1} and {values['RegionID']} -> {coord2}: {e}")
                  logging.warning(f"Coordinates: {coord1}, {coord2}")
-    print(f"Completed distances for RegionID {region_id}")  
-
+    print(f"Completed distances for RegionID {region_id}")
