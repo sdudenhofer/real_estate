@@ -64,6 +64,6 @@ for rows in distance_info:
                 connection.commit()
                 print(f"Inserted distance between {RegionID} and {values['RegionID']}: {distance} miles")
             except Exception as e:
-                 logging.error(f"Error calculating/inserting distance between {} -> {coord1} and {values['RegionID']} -> {coord2}: {e}")
+                 logging.error(f"Error calculating/inserting distance between {coord1} and {coord2}: {e}")
                  logging.warning(f"Coordinates: {coord1}, {coord2}")
     print(f"Completed distances for RegionID {region_id}")
