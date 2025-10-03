@@ -16,7 +16,7 @@ raw_data = "./data/City_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv"
 q = (
     pl.scan_csv(raw_data)    
       .sort("State")  
-      .select(["State", "RegionName"])
+      .select(["State", "RegionName", "RegionID"])
 )
 initial_data = pl.scan_csv(raw_data).sort("State")
 initial_df = initial_data.collect()
@@ -34,10 +34,9 @@ con.commit()
 
 con.sql("CREATE TABLE IF NOT EXISTS redfin_data AS SELECT * FROM initial_df")
 
-
-count = 0
 for rows in data.iter_rows(named=True):
         city_state = f"{rows['RegionName']}, {rows['State']}"
+        count = rows['RegionID']
         try:
             location = geolocator.geocode(city_state)
         except GeocoderTimedOut as g:
@@ -53,4 +52,3 @@ for rows in data.iter_rows(named=True):
                 print(f"Error inserting {city_state}: {e}")
         else:
             print(f"No Latitude, Longitude Data for: {city_state}")
-        count += 1
