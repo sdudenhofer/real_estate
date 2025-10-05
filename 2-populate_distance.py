@@ -22,11 +22,13 @@ schema = {
 }
 
 empty_df = pl.DataFrame([], schema=schema)
-error_df = pl.DataFrame([], schema=schema)
+
 connection.execute("""
                 CREATE TABLE IF NOT EXISTS distance_data (
                     RegionID1 INTEGER,
+                    city_state1 TEXT,
                     RegionID2 INTEGER,
+                    city_state2 TEXT,
                     distance_miles REAL
                 )
             """)
@@ -36,27 +38,33 @@ for row in city_state.iter_rows(named=True):
     city_state_str = city_state_str.replace("'", "''")  # Escape single quotes for SQL query
     RegionID = row['RegionID']
     try:
-        latlong_data = connection.execute(f"SELECT RegionID, city_state, latitude, longitude FROM city_geocode WHERE city_state = '{city_state_str}'").pl()
+        latlong_data = connection.execute(f"SELECT id as RegionID, city_state, latitude, longitude FROM city_geocode WHERE city_state = '{city_state_str}'").pl()
         empty_df.extend(latlong_data)
     except Exception as e:
         logging.error(f"Error retrieving lat/long for {city_state_str}: {e}")
-        error_df.extend([RegionID, city_state_str, 'NULL', 'NULL'])
+        empty_df.extend([RegionID, city_state_str, 'NULL', 'NULL'])
         continue
+q = empty_df.select(["RegionID", "city_state", "latitude", "longitude"]).unique()
 
-distance_info = empty_df['RegionID', 'latitude', 'longitude'].get_columns()
-distance_info2 = empty_df['RegionID', 'latitude', 'longitude'].get_columns()
+coords = []
 
-for RegionID, latitude, longitude in distance_info:
-    for RegionID_1, latitude_1, longitude_1 in distance_info2:
-        if (RegionID != RegionID_1):
-            coord1 = (latitude, longitude)
-            coord2 = (latitude_1, longitude_1)
+for values in empty_df.iter_rows(named=True):
+    for rows in q.iter_rows(named=True):
+        first_id = values['RegionID']
+        second_id = rows['RegionID']
+        coord1 = (values['latitude'], values['longitude'])
+        coord2 = (rows['latitude'], rows['longitude'])
+        dupe_coord = (coord1, coord2)
+        dupe_coord_rev = (coord2, coord1)
+        if (first_id != second_id) and dupe_coord not in coords and dupe_coord_rev not in coords:
             try:
                 distance = geodesic(coord1, coord2).miles
-                connection.execute(f"INSERT INTO distance_data (RegionID1, RegionID2, distance_miles) VALUES ({RegionID}, {RegionID_1}, {distance})")
+                connection.execute(f"INSERT INTO distance_data (RegionID1, city_state1, RegionID2, city_state2, distance_miles) VALUES ({values['RegionID']}, '{values['city_state']}', {rows['RegionID']}, '{rows['city_state']}', {distance})")
                 connection.commit()
-                logging.success(f"Inserted distance between {RegionID} and {RegionID_1}: {distance} miles")
+                print(f"Inserted distance between {first_id} and {second_id}: {distance} miles")
+                coords.append(dupe_coord)
             except Exception as e:
                  logging.error(f"Error calculating/inserting distance between {coord1} and {coord2}: {e}")
+                 next
         else:
-            logging.info(f"Skipping distance calculation for same RegionID: {RegionID}")
+            logging.info(f"Skipping distance calculation for same RegionID: {first_id}, {second_id}")
