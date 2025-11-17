@@ -9,11 +9,11 @@ In order to run this:
 #### You will need a Postgresql database
 #### Create a .env File
 
-- Clone this repo
-- Jump into the directory
-- Run uv sync
-- Run uv run data_load.py
-- Run uv run streamlit run main.py  <-- This will launch a local instance of streamlit
+1. Clone this repo
+2. Jump into the directory
+3. Run uv sync
+4. Run uv run data_load.py
+5. Run uv run streamlit run main.py  <-- This will launch a local instance of streamlit
 
 
 `git clone https://github.com/sdudenhofer/real_estate.git` <br>
