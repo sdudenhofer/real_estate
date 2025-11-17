@@ -1,5 +1,5 @@
 # Generated Real Estate Data
----
+
 
 This project was built using real estate data from RedFin and Latitude and Longitude data from [SimpleMaps](https://simplemaps.com/data/us-cities)
 
