@@ -11,9 +11,8 @@ In order to run this:
 - Run uv sync
 - Run uv run streamlit run main.py
 
-`
-git clone https://github.com/sdudenhofer/real_estate.git
-cd real_estate
-uv sync
-uv run streamlit run main.py
-`
+
+`git clone https://github.com/sdudenhofer/real_estate.git` 
+`cd real_estate` 
+`uv sync`
+`uv run streamlit run main.py`
