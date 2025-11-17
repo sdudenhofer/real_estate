@@ -12,7 +12,7 @@ In order to run this:
 - Run uv run streamlit run main.py
 
 
-`git clone https://github.com/sdudenhofer/real_estate.git` 
-`cd real_estate` 
-`uv sync`
-`uv run streamlit run main.py`
+`git clone https://github.com/sdudenhofer/real_estate.git` <br>
+`cd real_estate` <br>
+`uv sync`<br>
+`uv run streamlit run main.py` <br>
