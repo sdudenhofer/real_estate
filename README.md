@@ -12,7 +12,7 @@ In order to run this:
 1. Clone this repo
 2. Jump into the directory
 3. Run uv sync
-4. Run uv run data_load.py
+4. Run uv run data_load.py <-- This loads all of the data into the database
 5. Run uv run streamlit run main.py  <-- This will launch a local instance of streamlit
 
 
