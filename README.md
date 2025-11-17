@@ -19,6 +19,7 @@ In order to run this:
 `git clone https://github.com/sdudenhofer/real_estate.git` <br>
 `cd real_estate` <br>
 `uv sync`<br>
+`uv run data_load.py` <br>
 `uv run streamlit run main.py` <br>
 
 ## Work currently in progress
