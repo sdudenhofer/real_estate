@@ -1,5 +1,6 @@
 # Generated Real Estate Data
 
+## This currently processes the data from CSV files, writes them to a database and then makes calculations and generates the visualizations
 
 This project was built using real estate data from RedFin and Latitude and Longitude data from [SimpleMaps](https://simplemaps.com/data/us-cities)
 
@@ -7,7 +8,6 @@ This project was built using real estate data from RedFin and Latitude and Longi
 In order to run this:
 #### You will need a Postgresql database
 #### Create a .env File
-This currently processes the data from CSV files, writes them to a database and then makes calculations and generates the visualizations
 
 - Clone this repo
 - Jump into the directory
