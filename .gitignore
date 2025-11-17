@@ -11,3 +11,4 @@ notes.local
 *.db
 *.log
 old/*
+secrets.toml

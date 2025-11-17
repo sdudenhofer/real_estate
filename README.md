@@ -1,21 +1,19 @@
-# Real estate information
+# Generated Real Estate Data
+---
 
-### Currently this project processes a csv file from Redfin that contains monthly real estate sales data. Then it uses Nominatam to generate latitude and longitude coordinates. We then are generating the distance from each point to each other point. The reasoning for this project is I would like to see sales data compared to other cities that are within x miles. 
+This project was built using real estate data from RedFin and Latitude and Longitude data from [SimpleMaps](https://simplemaps.com/data/us-cities)
 
-To get started:
 
-- Clone this repo
-- Use uv to grab the needed modules
-```
+In order to run this:
+
+1 - Clone this repo
+2 - Jump into the directory
+3 - Run uv sync
+4 - Run uv run streamlit run main.py
+
+`
+git clone https://github.com/sdudenhofer/real_estate.git
+cd real_estate
 uv sync
-```
-- To run the app 
-```
-uv run fastapi dev
-```
-
-### Next Steps
-
-[] - Generate radius' for each location to see real estate data with in X miles
-[] - Generate Map and then build out pricing data scales
-[] - Currently saving to database in docker file
+uv run streamlit run main.py
+`

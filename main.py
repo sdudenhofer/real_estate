@@ -1,104 +1,174 @@
-import polars as pl
+import pandas as pd
+import streamlit as st
+from dotenv import load_dotenv
+import os
 from sqlmodel import SQLModel, Field, create_engine, Session
 from dotenv import load_dotenv
-import psycopg2
-import os
-from geopy.distance import geodesic
-from random import randint
+import altair as alt
 
 load_dotenv()
 pg_user = os.getenv("POSTGRES_USER")
 pg_password = os.getenv("POSTGRES_PASSWORD")
 pg_db = os.getenv("POSTGRES_DB")
 
-initial_data = pl.read_csv("data/City_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv")
-latlong_data = pl.read_csv("data/uscities.csv")
-initial_df = pl.DataFrame(initial_data)
-latlong_df = pl.DataFrame(latlong_data)
-general_data = initial_df.select(pl.col("RegionName", "StateName", "RegionID"))
-df = general_data.with_columns(
-    pl.concat_str(["RegionName", "StateName"], separator=", ").alias("city_state")
-)
-ll_df = latlong_df.with_columns(
-    pl.concat_str(pl.col("city_ascii"), pl.col("state_id"), separator=", ").alias(
-        "city_state"
-    )
-)
-# Add a new column for latitude and longitude
-df = df.join(ll_df, on="city_state", how="left")
-
-
 engine = create_engine(f"postgresql://{pg_user}:{pg_password}@localhost/{pg_db}")
-session = Session(engine)
 
-try:
-    initial_df.write_database(
-        connection=engine, table_name="redfin", if_table_exists="replace"
-    )
-    df.write_database(
-        connection=engine, table_name="latlong", if_table_exists="replace"
-    )
-except Exception as e:
-    print(f"An error occurred: {e}")
+state_query = "select distinct rd.state_name from realestatedata rd "
+state_data = pd.read_sql(state_query, engine)
+state_df = pd.DataFrame(state_data)
 
 
-query = (
-    "SELECT city_state, lat, lng FROM latlong WHERE lat IS NOT NULL AND LNG IS NOT NULL"
+st.header("Real Estate Data")
+
+# show list of state names (not the full dataframe) in the selectbox
+states = state_df["state_name"].tolist()
+state = st.selectbox("Select a State to get started.", states)
+st.header(f"Data for {state}")
+
+select_data_query = f'''
+SELECT * FROM realestatedata WHERE state_name =  %s ORDER BY "city_state"
+'''
+sd_data = pd.read_sql(select_data_query, engine, params=(state,))
+sd_df = pd.DataFrame(sd_data)
+
+# st.dataframe(sd_df)
+
+# let the user pick a city (filtered to the selected state) and then the RegionID for that city
+city_options = sd_df["city_state"].dropna().unique().tolist()
+if not city_options:
+    st.write("No cities found for selected state.")
+else:
+    city_options.sort(reverse=True)
+    city = st.selectbox("Select a City to view", city_options)
+
+    # find RegionID(s) that match the selected city within the already-state-filtered sd_df
+    region_ids = sd_df.loc[sd_df["city_state"] == city, "RegionID"].dropna().unique().tolist()
+    if not region_ids:
+        st.write("No RegionID found for selected city.")
+        region_id = None
+    elif len(region_ids) == 1:
+        region_id = int(region_ids[0])
+        # st.hidden(f"Using RegionID: {region_id}")
+    else:
+        # if multiple RegionIDs exist for the same city_state, let the user choose
+        region_id = int(st.selectbox("Multiple RegionIDs found — choose one", region_ids))
+
+    year = st.selectbox("Select a Year to View:", ["2020", "2021", "2022", "2023", "2024", "2025"])
+
+    st.header("Year Data by Month")
+    if year and region_id is not None:
+        # use parameterized query and proper identifier quoting (double quotes) for PostgreSQL
+        year_query = '''
+        SELECT "RegionID", "January", "February", "March", "April", "May", "June",
+               "July", "August", "September", "October", "November", "December"
+        FROM realestate_by_year
+        WHERE "Year" = %s AND "RegionID" = %s
+        '''
+        params = (int(year), int(region_id))
+        yd_data = pd.read_sql(year_query, engine, params=params)
+
+        if yd_data.empty:
+            st.write("No data for selected RegionID/year.")
+        else:
+            months = ["January","February","March","April","May","June","July","August","September","October","November","December"]
+            row = yd_data.iloc[0][months].astype(float)
+
+            # create a DataFrame indexed by month so the line chart x-axis is months
+            plot_df = pd.DataFrame({"Value": row.values}, index=months)
+            # make the index a categorical with the desired month order and sort by that order
+            plot_df.index = pd.CategoricalIndex(plot_df.index, categories=months, ordered=True)
+            plot_df = plot_df.sort_index()
+            st.line_chart(plot_df)
+    else:
+        st.write("Please select a region and year to view the data.")
+
+st.header("Average Home Value by Month")
+avg_data_query = f'''
+SELECT "city_state", "Year", rby."RegionID", AVG(COALESCE("January", 0)) AS avg_january, 
+  AVG(COALESCE("February", 0)) AS avg_february,
+  AVG(COALESCE("March", 0)) as avg_march,
+  AVG(COALESCE("April", 0)) as avg_april,
+  AVG(COALESCE("May", 0)) as avg_may,
+  AVG(COALESCE("June", 0)) as avg_june,
+  AVG(COALESCE("July", 0)) as avg_july,
+  AVG(COALESCE("August", 0)) as avg_august,
+  AVG(COALESCE("September", 0)) as avg_september,
+  AVG(COALESCE("October", 0)) as avg_october,
+  AVG(COALESCE("November", 0)) as avg_november,
+  AVG(COALESCE("December" , 0)) as avg_december
+  FROM realestate_by_year rby
+  LEFT OUTER JOIN realestatedata rd ON rby."RegionID" = rd."RegionID"
+  WHERE rby."RegionID" = '{region_id}'
+  GROUP BY rby."RegionID", "Year", "city_state"
+  '''
+avg_data = pd.read_sql(avg_data_query, engine)
+avg_month = pd.DataFrame(avg_data)
+
+# reshape months into long form so x-axis = Month and color = Year
+month_cols = [
+    "avg_january",
+    "avg_february",
+    "avg_march",
+    "avg_april",
+    "avg_may",
+    "avg_june",
+    "avg_july",
+    "avg_august",
+    "avg_september",
+    "avg_october",
+    "avg_november",
+    "avg_december",
+]
+month_map = {
+    "avg_january": "January",
+    "avg_february": "February",
+    "avg_march": "March",
+    "avg_april": "April",
+    "avg_may": "May",
+    "avg_june": "June",
+    "avg_july": "July",
+    "avg_august": "August",
+    "avg_september": "September",
+    "avg_october": "October",
+    "avg_november": "November",
+    "avg_december": "December",
+}
+
+melted = avg_month.melt(
+    id_vars=["city_state", "Year", "RegionID"], value_vars=month_cols, var_name="Month", value_name="Value"
 )
-distance_data = pl.read_database(query=query, connection=engine)
-distance_df = pl.DataFrame(distance_data)
+melted["Month"] = melted["Month"].map(month_map)
+# ensure month ordering on x-axis
+month_order = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+]
+melted["Month"] = pd.Categorical(melted["Month"], categories=month_order, ordered=True)
 
-distance_df = distance_df.with_columns(pl.col("city_state").str.replace("'", ""))
+chart = (
+    alt.Chart(melted)
+    .mark_line(point=True)
+    .encode(
+        x=alt.X("Month:N", sort=month_order, title="Month"),
+        y=alt.Y("Value:Q", title="Average Home Value"),
+        color=alt.Color("Year:N", title="Year"),
+        tooltip=["city_state", "RegionID", "Year", "Month", alt.Tooltip("Value:Q", format=",.2f")],
+    )
+    .properties(height=400)
+)
 
-distance_df = distance_df.with_columns(pl.col("city_state").str.replace("'", ""))
+table_data = melted.loc[melted["Year"] == int(year), ["Month", "Value"]].copy()
 
-
-class DistanceCalculator(SQLModel, table=True):
-    distance_id: int = Field(primary_key=True)
-    regionid_1: int
-    city_state_1: str
-    lat_1: float
-    long_1: float
-    regionid_2: int
-    city_state_2: str
-    lat_2: float
-    long_2: float
-    distance: float
-
-
-SQLModel.metadata.create_all(engine)
-
-length = randint(100, 999)
-
-for row in distance_df.iter_rows():
-    city_state_1 = row[0]
-    lat_1 = row[1]
-    long_1 = row[2]
-    try:
-        distance_query = f"SELECT city_state, lat, lng FROM latlong WHERE city_state != '{city_state_1}' AND lat IS NOT NULL AND lng IS NOT NULL"
-        distance_df = pl.read_database(query=distance_query, connection=engine)
-    except psycopg2.ProgrammingError as e:
-        print(f"An error occurred: {e}")
-    for rows in distance_df.iter_rows():
-        city_state_2 = rows[0]
-        lat_2 = rows[1]
-        long_2 = rows[2]
-        distance = geodesic((lat_1, long_1), (lat_2, long_2)).miles
-        dbWrite = DistanceCalculator(
-            distance_id=length,
-            regionid_1=1,
-            city_state_1=city_state_1,
-            lat_1=lat_1,
-            long_1=long_1,
-            regionid_2=2,
-            city_state_2=city_state_2,
-            lat_2=lat_2,
-            long_2=long_2,
-            distance=distance,
-        )
-        session.add(dbWrite)
-        session.commit()
-        print(
-            f"{city_state_1} to  {city_state_2}, distance={distance} added to database"
-        )
-        length += 3
+with st.expander("Show Average Home Value Data Table"):
+    st.table(table_data, border="horizontal")
+st.altair_chart(chart, use_container_width=True)
