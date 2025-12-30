@@ -1,16 +1,8 @@
 import calendar
-import os
 
 import duckdb
 import polars as pl
 import polars.selectors as cs
-from dotenv import load_dotenv
-from sqlmodel import Field, Session, SQLModel, create_engine
-
-# load_dotenv()
-# pg_user = os.getenv("POSTGRES_USER")
-# pg_password = os.getenv("POSTGRES_PASSWORD")
-# pg_db = os.getenv("POSTGRES_DB")
 
 housing_data = pl.read_csv("data/City_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv")
 housing_df = pl.DataFrame(housing_data)
@@ -30,8 +22,7 @@ latlng_df = latlong_df.with_columns(
 
 dataframe = df.join(latlng_df, on="city_state", how="left")
 
-# engine = create_engine(f"postgresql://{pg_user}:{pg_password}@localhost/{pg_db}")
-# session = Session(engine)
+
 conn = duckdb.connect("database/realestate_data.db")
 conn.sql("create table realestatedata as select * from dataframe")
 year = ["2020", "2021", "2022", "2023", "2024", "2025"]
